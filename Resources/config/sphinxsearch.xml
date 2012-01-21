@@ -12,6 +12,7 @@
     <services>
         <service id="search.sphinxsearch.indexer" class="%search.sphinxsearch.indexer.class%">
             <argument>%search.sphinxsearch.indexer.bin%</argument>
+            <argument>%search.sphinxsearch.indexes%</argument>
         </service>
 
         <service id="search.sphinxsearch.search" class="%search.sphinxsearch.search.class%">

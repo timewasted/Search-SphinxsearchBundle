@@ -12,13 +12,33 @@ class Indexer
 	private $bin;
 
 	/**
+	 * @var array $indexes
+	 *
+	 * $this->indexes should have the format:
+	 *
+	 *	$this->indexes = array(
+	 *		'IndexLabel' => array(
+	 *			'index_name'	=> 'IndexName',
+	 *			'field_weights'	=> array(
+	 *				'FieldName'	=> (int)'FieldWeight',
+	 *				...,
+	 *			),
+	 *		),
+	 *		...,
+	 *	);
+	 */
+	private $indexes;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param string $bin The path to the indexer executable.
+	 * @param array $indexes The list of indexes that can be used.
 	 */
-	public function __construct($bin = '/usr/bin/indexer')
+	public function __construct($bin = '/usr/bin/indexer', array $indexes = array())
 	{
 		$this->bin = $bin;
+		$this->indexes = $indexes;
 	}
 
 	/**
@@ -26,7 +46,7 @@ class Indexer
 	 */
 	public function rotateAll()
 	{
-		$this->rotate(array('--all'));
+		$this->rotate(array_keys($this->indexes));
 	}
 
 	/**
@@ -43,13 +63,19 @@ class Indexer
 			->add('--rotate')
 		;
 		if( is_array($indexes) ) {
-			foreach( $indexes as &$index )
-				$pb->add($index);
+			foreach( $indexes as &$label ) {
+				if( isset($this->indexes[$label]) )
+					$pb->add($this->indexes[$label]['index_name']);
+			}
 		} elseif( is_string($indexes) ) {
-			$pb->add($indexes);
+			if( isset($this->indexes[$indexes]) )
+				$pb->add($this->indexes[$indexes]['index_name']);
 		} else {
 			throw new \RuntimeException(sprintf('Indexes can only be an array or string, %s given.', gettype($indexes)));
 		}
+		/**
+		 * FIXME: Throw an error if no valid indexes were provided?
+		 */
 
 		$indexer = $pb->getProcess();
 		$code = $indexer->run();
