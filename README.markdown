@@ -64,6 +64,43 @@ At least one index must be defined, and you may define as many as you like.
 
 In the above sample configuration, `Categories` is used as a label for the index named `%sphinxsearch_index_categories%` (as defined in your `sphinx.conf`).  This allows you to avoid having to hard code raw index names inside of your code.  You can also optionally define field weights to be applied when searching.  In the case of the `Items` index, `Description` has a low weight, while `SKU` is weighted significantly higher.
 
+
+
+### EXAMPLE
+
+our basic search is simply:
+```
+$indexesToSearch = array(
+  'Items' => array(),
+  'Categories' => array(),
+);
+$sphinxSearch = $this->get('search.sphinxsearch.search');
+$searchResults = $sphinxSearch->search('search query', $indexesToSearch);
+
+```
+That performs a search for search query against the indexes labeled Items and Categories with whatever defaults that are defined (both here and in your sphinx.conf).
+
+If you want to do more than your basic search, it would look something like:
+```
+$indexesToSearch = array(
+  'Items' => array(
+    'result_offset' => 0,
+    'result_limit' => 25,
+  ),
+  'Categories' => array(
+    'result_offset' => 0,
+    'result_limit' => 10,
+  ),
+);
+$sphinxSearch = $this->get('search.sphinxsearch.search');
+$sphinxSearch->setMatchMode(SPH_MATCH_EXTENDED);
+$sphinxSearch->setFilter('disabled', array(1), true);
+$searchResults = $sphinxSearch->search('search query', $indexesToSearch);
+```
+
+This would again search Items and Categories for search query, but now Items will return the first 25 matches, and Categories will return the first 10. In order to define a result_offset or a result_limit, you must explicitly define both values. Also, this will use the Extended matching mode, and exclude all results with a disabled attribute set to 1.
+
+
 License:
 --------
 
