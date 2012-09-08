@@ -1,0 +1,23 @@
+{
+  "name": "search/sphinxsearch-bundle",
+  "type": "symfony-bundle",
+  "description": "Sphinx search bundle for Symfony 2",
+  "keywords": ["sphinx", "sphinxsearch", "symfony2"],
+  "homepage": "https://github.com/timewasted/Search-SphinxsearchBundle",
+  "license": "BSD-2-Clause",
+  "authors": [
+    {
+      "name": "Ryan Rogers",
+      "email": "ryan@timewasted.me"
+    }
+  ],
+  "require": {
+    "php": ">=5.3.3"
+  },
+  "autoload": {
+    "psr-0": {
+      "Search\\SphinxsearchBundle": ""
+    }
+  },
+  "target-dir": "Search/SphinxsearchBundle"
+}

@@ -22,18 +22,12 @@ class Sphinxsearch
 	/**
 	 * @var array $indexes
 	 *
-	 * $this->indexes should have the format:
+	 * $this->indexes should look like:
 	 *
-	 *	$this->indexes = array(
-	 *		'IndexLabel' => array(
-	 *			'index_name'	=> 'IndexName',
-	 *			'field_weights'	=> array(
-	 *				'FieldName'	=> (int)'FieldWeight',
-	 *				...,
-	 *			),
-	 *		),
-	 *		...,
-	 *	);
+	 * $this->indexes = array(
+	 *   'IndexLabel' => 'Index name as defined in sphinxsearch.conf',
+	 *   ...,
+	 * );
 	 */
 	private $indexes;
 
@@ -43,8 +37,8 @@ class Sphinxsearch
 	private $sphinx;
 
 	/**
-     * Constructor.
-     *
+	 * Constructor.
+	 *
 	 * @param string $host The server's host name/IP.
 	 * @param string $port The port that the server is listening on.
 	 * @param string $socket The UNIX socket that the server is listening on.
@@ -65,8 +59,20 @@ class Sphinxsearch
 	}
 
 	/**
-     * Set the desired match mode.
-     *
+	 * Escape the supplied string.
+	 *
+	 * @param string $string The string to be escaped.
+	 *
+	 * @return string The escaped string.
+	 */
+	public function escapeString($string)
+	{
+		return $this->sphinx->escapeString($string);
+	}
+
+	/**
+	 * Set the desired match mode.
+	 *
 	 * @param int $mode The matching mode to be used.
 	 */
 	public function setMatchMode($mode)
@@ -75,8 +81,8 @@ class Sphinxsearch
 	}
 
 	/**
-     * Set the desired search filter.
-     *
+	 * Set the desired search filter.
+	 *
 	 * @param string $attribute The attribute to filter.
 	 * @param array $values The values to filter.
 	 * @param bool $exclude Is this an exclusion filter?
@@ -87,26 +93,31 @@ class Sphinxsearch
 	}
 
 	/**
-     * Search for the specified query string.
-     *
+	 * Search for the specified query string.
+	 *
 	 * @param string $query The query string that we are searching for.
 	 * @param array $indexes The indexes to perform the search on.
 	 *
 	 * @return array The results of the search.
 	 *
-	 * $indexes should have the format:
+	 * $indexes should look like:
 	 *
-	 *	$indexes = array(
-	 *		'IndexLabel' => array(
-	 *			'result_offset'	=> (int),
-	 *			'result_limit'	=> (int)
-	 *		),
-	 *		...,
-	 *	);
+	 * $indexes = array(
+	 *   'IndexLabel' => array(
+	 *     'result_offset' => (int), // optional unless result_limit is set
+	 *     'result_limit'  => (int), // optional unless result_offset is set
+	 *     'field_weights' => array( // optional
+	 *       'FieldName'   => (int),
+	 *       ...,
+	 *     ),
+	 *   ),
+	 *   ...,
+	 * );
 	 */
-	public function search($query, array $indexes)
+	public function search($query, array $indexes, $escapeQuery = true)
 	{
-		$query = $this->sphinx->escapeString($query);
+		if( $escapeQuery )
+			$query = $this->sphinx->escapeString($query);
 
 		$results = array();
 		foreach( $indexes as $label => $options ) {
@@ -125,16 +136,22 @@ class Sphinxsearch
 			/**
 			 * Weight the individual fields.
 			 */
-			if( !empty($this->indexes[$label]['field_weights']) )
-				$this->sphinx->setFieldWeights($this->indexes[$label]['field_weights']);
+			if( isset($options['field_weights']) )
+				$this->sphinx->setFieldWeights($options['field_weights']);
 
 			/**
 			 * Perform the query.
 			 */
-			$results[$label] = $this->sphinx->query($query, $this->indexes[$label]['index_name']);
+			$results[$label] = $this->sphinx->query($query, $this->indexes[$label]);
 			if( $results[$label]['status'] !== SEARCHD_OK )
 				throw new \RuntimeException(sprintf('Searching index "%s" for "%s" failed with error "%s".', $label, $query, $this->sphinx->getLastError()));
 		}
+
+		/**
+		 * If only one index was searched, return that index's results directly.
+		 */
+		if( count($indexes) === 1 && count($results) === 1 )
+			$results = reset($results);
 
 		/**
 		 * FIXME: Throw an exception if $results is empty?

@@ -32,17 +32,7 @@ class SphinxsearchExtension extends Extension
 		/**
 		 * Indexes.
 		 */
-		$indexes = array();
-		foreach( $config['indexes'] as $label => $index ) {
-			foreach( $index as $name => $fields ) {
-				if( !isset($indexes[$label]) )
-					$indexes[$label] = array('index_name' => $name, 'field_weights' => array());
-
-				foreach( $fields as $field => $weight )
-					$indexes[$label]['field_weights'][$field] = $weight;
-			}
-		}
-		$container->setParameter('search.sphinxsearch.indexes', $indexes);
+		$container->setParameter('search.sphinxsearch.indexes', $config['indexes']);
 
 		/**
 		 * Searchd.
