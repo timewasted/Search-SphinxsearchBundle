@@ -97,65 +97,52 @@ class Sphinxsearch
 	 *
 	 * @param string $query The query string that we are searching for.
 	 * @param array $indexes The indexes to perform the search on.
+	 * @param array $options The options for the query.
+	 * @param bool $escapeQuery Should the query string be escaped?
 	 *
 	 * @return array The results of the search.
-	 *
-	 * $indexes should look like:
-	 *
-	 * $indexes = array(
-	 *   'IndexLabel' => array(
-	 *     'result_offset' => (int), // optional unless result_limit is set
-	 *     'result_limit'  => (int), // optional unless result_offset is set
-	 *     'field_weights' => array( // optional
-	 *       'FieldName'   => (int),
-	 *       ...,
-	 *     ),
-	 *   ),
-	 *   ...,
-	 * );
 	 */
-	public function search($query, array $indexes, $escapeQuery = true)
+	public function search($query, array $indexes, array $options = array(), $escapeQuery = true)
 	{
 		if( $escapeQuery )
 			$query = $this->sphinx->escapeString($query);
 
-		$results = array();
-		foreach( $indexes as $label => $options ) {
-			/**
-			 * Ensure that the label corresponds to a defined index.
-			 */
-			if( !isset($this->indexes[$label]) )
-				continue;
-
-			/**
-			 * Set the offset and limit for the returned results.
-			 */
-			if( isset($options['result_offset']) && isset($options['result_limit']) )
-				$this->sphinx->setLimits($options['result_offset'], $options['result_limit']);
-
-			/**
-			 * Weight the individual fields.
-			 */
-			if( isset($options['field_weights']) )
-				$this->sphinx->setFieldWeights($options['field_weights']);
-
-			/**
-			 * Perform the query.
-			 */
-			$results[$label] = $this->sphinx->query($query, $this->indexes[$label]);
-			if( $results[$label]['status'] !== SEARCHD_OK )
-				throw new \RuntimeException(sprintf('Searching index "%s" for "%s" failed with error "%s".', $label, $query, $this->sphinx->getLastError()));
+		/**
+		 * Build the list of indexes to be queried.
+		 */
+		$indexNames = '';
+		foreach( $indexes as &$label ) {
+			if( isset($this->indexes[$label]) )
+				$indexNames .= $this->indexes[$label] . ' ';
 		}
 
 		/**
-		 * If only one index was searched, return that index's results directly.
+		 * If no valid indexes were specified, return an empty result set.
+		 *
+		 * FIXME: This should probably throw an exception.
 		 */
-		if( count($indexes) === 1 && count($results) === 1 )
-			$results = reset($results);
+		if( empty($indexNames) )
+			return array();
 
 		/**
-		 * FIXME: Throw an exception if $results is empty?
+		 * Set the offset and limit for the returned results.
 		 */
+		if( isset($options['result_offset']) && isset($options['result_limit']) )
+			$this->sphinx->setLimits($options['result_offset'], $options['result_limit']);
+
+		/**
+		 * Weight the individual fields.
+		 */
+		if( isset($options['field_weights']) )
+			$this->sphinx->setFieldWeights($options['field_weights']);
+
+		/**
+		 * Perform the query.
+		 */
+		$results = $this->sphinx->query($query, $indexNames);
+		if( $results['status'] !== SEARCHD_OK )
+			throw new \RuntimeException(sprintf('Searching index "%s" for "%s" failed with error "%s".', $label, $query, $this->sphinx->getLastError()));
+
 		return $results;
 	}
 }
