@@ -40,40 +40,32 @@ Usage examples:
 The most basic search, using the above configuration as an example, would be:
 
 ``` php
-$indexesToSearch = array(
-  'Items' => array(),
-  'Categories' => array(),
-);
+$indexesToSearch = array('Items');
 $sphinxSearch = $this->get('search.sphinxsearch.search');
 $searchResults = $sphinxSearch->search('search query', $indexesToSearch);
 ```
 
-This performs a search for `search query` against the indexes labeled `Items` and `Categories`.  The results of the search would be stored in `$searchResults['Items']` and `$searchResults['Categories']`.
+This performs a search for `search query` against the index labeled `Items`.  The results of the search are stored in `$searchResults`.
 
 You can also perform more advanced searches, such as:
 
 ``` php
-$indexesToSearch = array(
-  'Items' => array(
-    'result_offset' => 0,
-    'result_limit' => 25,
-    'field_weights' => array(
-      'Name' => 2,
-      'SKU' => 3,
-    ),
-  ),
-  'Categories' => array(
-    'result_offset' => 0,
-    'result_limit' => 10,
+$indexesToSearch = array('Items');
+$options = array(
+  'result_offset' => 0,
+  'result_limit' => 25,
+  'field_weights' => array(
+    'Name' => 2,
+    'SKU' => 3,
   ),
 );
 $sphinxSearch = $this->get('search.sphinxsearch.search');
 $sphinxSearch->setMatchMode(SPH_MATCH_EXTENDED2);
 $sphinxSearch->setFilter('disabled', array(1), true);
-$searchResults = $sphinxSearch->search('search query', $indexesToSearch);
+$searchResults = $sphinxSearch->search('search query', $indexesToSearch, $options);
 ```
 
-This would again search `Items` and `Categories` for `search query`, but now `Items` will return up to the first 25 matches and weight the `Name` and `SKU` fields higher than normal, and `Categories` will return up to the first 10.  Note that in order to define a `result_offset` or a `result_limit`, you must explicitly define both values.  Also, this search will use [the Extended query syntax](http://sphinxsearch.com/docs/current.html#extended-syntax), and exclude all results with a `disabled` attribute set to 1.
+This would again search `Items` for `search query`, but now it will only return up to the first 25 matches and weight the `Name` and `SKU` fields higher than normal.  Note that in order to define a `result_offset` or a `result_limit`, you must explicitly define both values.  Also, this search will use [the Extended query syntax](http://sphinxsearch.com/docs/current.html#extended-syntax), and exclude all results with a `disabled` attribute set to 1.
 
 
 
