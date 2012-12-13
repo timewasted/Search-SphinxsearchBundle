@@ -1,6 +1,11 @@
 Changelog
 =========
 
+v1.2.1
+------
+
+* Fix the path to `SphinxAPI.php` (really, this time).  It now looks for it at `vendor/search/sphinxsearch-bundle/Search/SphinxsearchBundle/Services/Search/SphinxAPI.php`
+
 v1.2.0
 ------
 
