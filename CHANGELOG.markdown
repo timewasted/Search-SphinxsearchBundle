@@ -1,6 +1,13 @@
 Changelog
 =========
 
+v1.2.2
+------
+
+* Implement `Sphinxsearch::addQuery`.  This is a wrapper for [the official API call](http://sphinxsearch.com/docs/current.html#api-reference) of the same name, with the exception that it translates index labels to index names in the same way that `Sphinxsearch::search` does.
+
+* Implement `Sphinxsearch::setLimits`, `Sphinxsearch::setFieldWeights`, `Sphinxsearch::resetFilters`, and `Sphinxsearch::runQueries`.  These are strictly wrappers for [the official API calls](http://sphinxsearch.com/docs/current.html#api-reference) of the same name.
+
 v1.2.1
 ------
 
