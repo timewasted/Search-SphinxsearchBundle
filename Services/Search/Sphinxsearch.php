@@ -81,6 +81,34 @@ class Sphinxsearch
 	}
 
 	/**
+	 * Set limits on the range and number of results returned.
+	 *
+	 * @param int $offset The number of results to seek past.
+	 * @param int $limit The number of results to return.
+	 * @param int $max The maximum number of matches to retrieve.
+	 * @param int $cutoff The cutoff to stop searching at.
+	 */
+	public function setLimits($offset, $limit, $max = 0, $cutoff = 0)
+	{
+		$this->sphinx->setLimits($offset, $limit, $max, $cutoff);
+	}
+
+	/**
+	 * Set weights for individual fields.  $weights should look like:
+	 *
+	 * $weights = array(
+	 *   'Normal field name' => 1,
+	 *   'Important field name' => 10,
+	 * );
+	 *
+	 * @param array $weights Array of field weights.
+	 */
+	public function setFieldWeights(array $weights)
+	{
+		$this->sphinx->setFieldWeights($weights);
+	}
+
+	/**
 	 * Set the desired search filter.
 	 *
 	 * @param string $attribute The attribute to filter.
@@ -90,6 +118,14 @@ class Sphinxsearch
 	public function setFilter($attribute, $values, $exclude = false)
 	{
 		$this->sphinx->setFilter($attribute, $values, $exclude);
+	}
+
+	/**
+	 * Reset all previously set filters.
+	 */
+	public function resetFilters()
+	{
+		$this->sphinx->resetFilters();
 	}
 
 	/**
@@ -144,5 +180,33 @@ class Sphinxsearch
 			throw new \RuntimeException(sprintf('Searching index "%s" for "%s" failed with error "%s".', $label, $query, $this->sphinx->getLastError()));
 
 		return $results;
+	}
+
+	/**
+	 * Adds a query to a multi-query batch using current settings.
+	 *
+	 * @param string $query The query string that we are searching for.
+	 * @param array $indexes The indexes to perform the search on.
+	 */
+	public function addQuery($query, array $indexes)
+	{
+		$indexNames = '';
+		foreach( $indexes as &$label ) {
+			if( isset($this->indexes[$label]) )
+				$indexNames .= $this->indexes[$label] . ' ';
+		}
+
+		if( !empty($indexNames) )
+			$this->sphinx->addQuery($query, $indexNames);
+	}
+
+	/**
+	 * Runs the currently batched queries, and returns the results.
+	 *
+	 * @return array The results of the queries.
+	 */
+	public function runQueries()
+	{
+		return $this->sphinx->runQueries();
 	}
 }
